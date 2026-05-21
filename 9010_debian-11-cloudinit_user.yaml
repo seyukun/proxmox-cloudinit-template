@@ -1,0 +1,16 @@
+#cloud-config
+hostname: debian
+manage_etc_hosts: true
+fqdn: debian
+chpasswd:
+  expire: False
+users:
+  - name: debian
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_import_id:
+      - gh:seyukun
+apt:
+  primary:
+    - arches: [default]
+      uri: "http://ftp.udx.icscoe.jp/Linux/debian"

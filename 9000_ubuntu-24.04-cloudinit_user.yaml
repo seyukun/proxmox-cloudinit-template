@@ -1,0 +1,16 @@
+#cloud-config
+hostname: ubuntu
+manage_etc_hosts: true
+fqdn: ubuntu
+chpasswd:
+  expire: False
+users:
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_import_id:
+      - gh:seyukun
+apt:
+  primary:
+    - arches: [default]
+      uri: "http://ftp.udx.icscoe.jp/Linux/ubuntu"
