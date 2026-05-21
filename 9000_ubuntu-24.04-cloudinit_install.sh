@@ -20,6 +20,13 @@ qemu-img create -f $FORMAT $IMAGE_TMP 20G
 virt-resize --expand /dev/sda1 $IMAGE_DIR/$IMAGE_NAME $IMAGE_TMP
 mv $IMAGE_TMP $IMAGE_DIR/$IMAGE_NAME
 
+virt-customize \
+	-a "$IMAGE_DIR/$IMAGE_NAME" \
+	--update \
+	--install qemu-guest-agent \
+	--run-command 'apt-get clean' \
+	--run-command 'systemctl enable qemu-guest-agent'
+
 qm create $VM_ID \
 	--name $VM_NAME \
 	--memory 512 \
@@ -38,13 +45,6 @@ qm set $VM_ID --serial0 socket --vga serial0
 qm set $VM_ID --boot order=scsi0
 
 qm resize $VM_ID scsi0 20G
-
-virt-customize \
-        --format raw \
-        -a "$(pvesm path $(qm config "$VM_ID" | awk -F': ' '/^scsi0:/ {print $2}' | cut -d',' -f1))" \
-        --install qemu-guest-agent \
-        --run-command 'apt-get clean' \
-        --run-command 'systemctl enable qemu-guest-agent'
 
 qm template $VM_ID
 
