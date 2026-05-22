@@ -34,15 +34,11 @@ qm create $VM_ID \
 	--cpu "x86-64-v4,flags=+nested-virt" \
 	--net0 virtio,bridge="$BRIDGE" \
 	--scsihw virtio-scsi-pci \
-	--agent enabled=1
-
-qm set $VM_ID --scsi0 "local-lvm:0,import-from=$IMAGE_DIR/$IMAGE_NAME"
-
-qm set $VM_ID --ide2 "local-lvm:cloudinit"
-
-qm set $VM_ID --serial0 socket --vga serial0
-
-qm set $VM_ID --boot order=scsi0
+	--agent enabled=1 \
+	--scsi0 "local-lvm:0,import-from=$IMAGE_DIR/$IMAGE_NAME" \
+	--ide2 "local-lvm:cloudinit" \
+	--serial0 socket --vga serial0 \
+	--boot order=scsi0
 
 qm resize $VM_ID scsi0 20G
 
