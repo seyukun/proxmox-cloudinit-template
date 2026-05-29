@@ -2,17 +2,14 @@
 
 set -eux
 
-IMAGE_URL=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2
-IMAGE_DIR=/var/lib/vz/template/iso
-IMAGE_NAME=debian-12-generic-amd64.qcow2
-VM_ID=9011
-VM_NAME=debian-12-cloudinit
+IMAGE_URL=https://ftp.udx.icscoe.jp/Linux/ubuntu-cloud-images/focal/current/focal-server-cloudimg-amd64.img
+IMAGE_PATH=/var/lib/vz/template/iso/focal-server-cloudimg-amd64.img
+VM_ID=9000
+VM_NAME=ubuntu-20.04-cloudinit
 BRIDGE=vmbr0
 STORAGE=local-lvm
-CICUSTOM_USER=local:snippets/${VM_ID}_debian-12-cloudinit_user.yaml
-CICUSTOM_META=local:snippets/${VM_ID}_debian-12-cloudinit_meta.yaml
-
-IMAGE_PATH="$IMAGE_DIR/$IMAGE_NAME"
+CICUSTOM_USER=local:snippets/${VM_ID}_ubuntu-20.04-cloudinit_user.yaml
+CICUSTOM_META=local:snippets/${VM_ID}_ubuntu-20.04-cloudinit_meta.yaml
 
 curl -sLo "$IMAGE_PATH" "$IMAGE_URL"
 
@@ -32,20 +29,20 @@ virt-customize \
 
 qm create $VM_ID \
 	--name $VM_NAME \
-	--memory 512 \
-	--cores 1 \
 	--cpu "x86-64-v4,flags=+nested-virt" \
-	--net0 virtio,bridge="$BRIDGE" \
+	--cores 1 \
+	--memory 512 \
 	--scsihw virtio-scsi-pci \
-	--agent enabled=1 \
 	--scsi0 "${STORAGE}:0,import-from=$IMAGE_PATH" \
 	--ide2 "${STORAGE}:cloudinit" \
 	--serial0 socket \
 	--vga serial0 \
 	--boot order=scsi0 \
-	--cicustom "user=${CICUSTOM_USER},meta=${CICUSTOM_META}" \
+	--net0 virtio,bridge="$BRIDGE" \
 	--ipconfig0 ip=dhcp,ip6=auto \
 	--nameserver "1.1.1.1 1.0.0.1" \
-	--searchdomain "localhost" | sed 's/ -/\n\t-/g'
+	--searchdomain "localhost" | sed 's/ -/\n\t-/g' \
+	--agent enabled=1 \
+	--cicustom "user=${CICUSTOM_USER},meta=${CICUSTOM_META}" \
 
 qm template $VM_ID

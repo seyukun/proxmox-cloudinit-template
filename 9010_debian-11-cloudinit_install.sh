@@ -12,20 +12,23 @@ STORAGE=local-lvm
 CICUSTOM_USER=local:snippets/${VM_ID}_debian-11-cloudinit_user.yaml
 CICUSTOM_META=local:snippets/${VM_ID}_debian-11-cloudinit_meta.yaml
 
-curl -sLo "$IMAGE_DIR/$IMAGE_NAME" "$IMAGE_URL"
+IMAGE_PATH="$IMAGE_DIR/$IMAGE_NAME"
 
-FORMAT=$(qemu-img info "$IMAGE_DIR/$IMAGE_NAME" | awk -F': ' '/file format:/ {print $2}')
-IMAGE_TMP=$IMAGE_DIR/$IMAGE_NAME.tmp
-qemu-img create -f $FORMAT $IMAGE_TMP 20G
-virt-resize --expand /dev/sda1 $IMAGE_DIR/$IMAGE_NAME $IMAGE_TMP
-mv $IMAGE_TMP $IMAGE_DIR/$IMAGE_NAME
+curl -sLo "$IMAGE_PATH" "$IMAGE_URL"
+
+qemu-img resize "$IMAGE_PATH" 20G
 
 virt-customize \
-	-a "$IMAGE_DIR/$IMAGE_NAME" \
+	-a "$IMAGE_PATH" \
+	--run-command 'growpart /dev/sda 1' \
+	--run-command 'resize2fs /dev/sda1' \
 	--update \
 	--install qemu-guest-agent \
 	--run-command 'apt-get clean' \
-	--run-command 'systemctl enable qemu-guest-agent'
+	--run-command 'systemctl enable qemu-guest-agent' \
+	--run-command 'truncate -s 0 /etc/machine-id' \
+	--run-command 'rm -f /var/lib/dbus/machine-id' \
+	--run-command 'rm -f /var/lib/systemd/random-seed'
 
 qm create $VM_ID \
 	--name $VM_NAME \
@@ -35,17 +38,14 @@ qm create $VM_ID \
 	--net0 virtio,bridge="$BRIDGE" \
 	--scsihw virtio-scsi-pci \
 	--agent enabled=1 \
-	--scsi0 "local-lvm:0,import-from=$IMAGE_DIR/$IMAGE_NAME" \
-	--ide2 "local-lvm:cloudinit" \
-	--serial0 socket --vga serial0 \
-	--boot order=scsi0
-
-qm resize $VM_ID scsi0 20G
-
-qm template $VM_ID
-
-qm set $VM_ID \
+	--scsi0 "${STORAGE}:0,import-from=$IMAGE_PATH" \
+	--ide2 "${STORAGE}:cloudinit" \
+	--serial0 socket \
+	--vga serial0 \
+	--boot order=scsi0 \
 	--cicustom "user=${CICUSTOM_USER},meta=${CICUSTOM_META}" \
 	--ipconfig0 ip=dhcp,ip6=auto \
 	--nameserver "1.1.1.1 1.0.0.1" \
 	--searchdomain "localhost" | sed 's/ -/\n\t-/g'
+
+qm template $VM_ID

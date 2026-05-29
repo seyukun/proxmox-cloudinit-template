@@ -2,15 +2,15 @@
 
 set -eux
 
-IMAGE_URL=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2
+IMAGE_URL=https://ftp.udx.icscoe.jp/Linux/ubuntu-cloud-images/jammy/current/jammy-server-cloudimg-amd64.img
 IMAGE_DIR=/var/lib/vz/template/iso
-IMAGE_NAME=debian-12-generic-amd64.qcow2
-VM_ID=9011
-VM_NAME=debian-12-cloudinit
+IMAGE_NAME=jammy-server-cloudimg-amd64.img
+VM_ID=9001
+VM_NAME=ubuntu-22.04-cloudinit
 BRIDGE=vmbr0
 STORAGE=local-lvm
-CICUSTOM_USER=local:snippets/${VM_ID}_debian-12-cloudinit_user.yaml
-CICUSTOM_META=local:snippets/${VM_ID}_debian-12-cloudinit_meta.yaml
+CICUSTOM_USER=local:snippets/${VM_ID}_ubuntu-22.04-cloudinit_user.yaml
+CICUSTOM_META=local:snippets/${VM_ID}_ubuntu-22.04-cloudinit_meta.yaml
 
 IMAGE_PATH="$IMAGE_DIR/$IMAGE_NAME"
 
